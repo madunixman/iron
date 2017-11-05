@@ -79,8 +79,6 @@ if [ "$#" = 2 ];then
 	fi 
 	if [ "$operation" = "setup" ]; then
 		test -f ${RCFILE} || ( service_home_setup_write ; echo "Edit values in ${RCFILE}"; exit 0) 
-		source ${RCFILE}
-		service_home_setup_write $service
 	fi 
 	if [ "$operation" = "delete" ]; then
 		source ${RCFILE}
