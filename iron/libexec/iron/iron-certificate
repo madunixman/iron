@@ -1,0 +1,58 @@
+#! /bin/bash 
+# Usage: iron certificate <sign> <filename>
+# Summary: manage CA
+# Help: This command groups commands used to setup config create delete a CA
+
+
+APPNAME="iron"
+CURRDIR=$(pwd)
+
+RCDIR=$HOME/.$APPNAME
+test -d $RCDIR || mkdir -p $RCDIR
+CURRENT_TSTAMP=$(date '+%Y%m%d%H%M')
+
+function certificate_sign()
+{
+	service=$1
+	csrfile=$2
+	client=$(basename $csrfile | sed -e 's/.csr$//')
+	CLIENT_CERTPATH=$RCDIR/$service/certs
+	CP=$CLIENT_CERTPATH/$client
+	test -d ${CP} || mkdir -p ${CP}
+	#openssl x509 -req -days 365 -CA $CAPATH/ca.crt -CAkey $CAPATH/ca.key -CAcreateserial -in $CP/$client.csr -out $CP/$client.crt
+	openssl x509 -req -days 365 -CA $CAPATH/ca.crt -CAkey $CAPATH/ca.key -CAcreateserial -in $csrfile -out $CP/$client.crt
+	test -f $CP/$client.crt && echo "Created certificate in [$CP/$client.crt]"
+}
+
+function certificate_create()
+{
+	service=$1
+	client=$2
+	CLIENT_CERTPATH=$RCDIR/$service/certs
+	CP=$CLIENT_CERTPATH/$client
+	test -d ${CP} || mkdir -p ${CP}
+	openssl x509 -req -days 365 -CA $CAPATH/ca.crt -CAkey $CAPATH/ca.key -CAcreateserial -in $CP/$client.csr -out $CP/$client.crt
+	test -f $CP/$client.crt && echo "Created certificate in [$CP/$client.crt]"
+}
+
+if [ "$#" = 3 ];then
+	operation=$1
+	service=$2
+	CA_RCFILE="$HOME/"."$APPNAME/default-ca"".env"
+	source ${CA_RCFILE}
+	if [ "$operation" = "sign" ]; then
+		csrfile=$3
+		certificate_sign $service $csrfile
+	fi 
+
+	if [ "$operation" = "create" ]; then
+		client=$3
+		certificate_create $service $client
+	fi 
+else
+	echo "Usage:"
+	echo "$0 <sign> <CSR-file>"
+	echo "$0 <create> <client-id>"
+	exit -1
+fi
+

@@ -1,0 +1,93 @@
+#! /bin/bash 
+# Usage: iron service <service-name> <setup|create|delete>
+# Summary: manage CA
+# Help: This command groups commands used to setup config create delete a CA
+
+APPNAME="iron"
+CURRDIR=$(pwd)
+
+RCDIR=$HOME/.$APPNAME
+test -d $RCDIR || mkdir -p $RCDIR
+CURRENT_TSTAMP=$(date '+%Y%m%d%H%M')
+
+function service_create()
+{
+	test -d $CERTPATH   || mkdir -p $CERTPATH
+	openssl genrsa -out   $CERTPATH/server.key 2048 
+	openssl req    -batch -new -key $CERTPATH/server.key      -out $CERTPATH/server.csr -config $SERVER_CONFIG_FILE
+	openssl x509   -req   -days 365 -in $CERTPATH/server.csr -signkey $CERTPATH/server.key -out $CERTPATH/server.crt
+}
+
+function service_home_setup_delete()
+{
+	DOMAIN=$1
+	echo "About to DELETE cert path: [$RCDIR/${DOMAIN}] are you sure? y/n"
+	read confirmation
+	if [ "$confirmation" = "y" ]; then
+		(rm -fr $RCDIR/${DOMAIN} ; rm -fr $RCFILE) && echo "CA DELETED"
+	else
+		echo "SKIPPING"
+		exit -1
+	fi
+}
+
+function service_home_setup_write()
+{
+	DOMAIN=$1
+	test -d $RCDIR/${DOMAIN} && ( echo "Dir $RCDIR/${DOMAIN} exist, please delete before" && exit -1)
+	test -d $RCDIR/${DOMAIN} || mkdir -p $RCDIR/${DOMAIN}
+	test -d $RCDIR/${DOMAIN}/conf || mkdir -p $RCDIR/${DOMAIN}/conf
+	echo "CERTPATH=${RCDIR}/${DOMAIN}/certs" >> ${RCFILE}
+	echo "CAPATH=${RCDIR}/CA"  >> ${RCFILE}
+	echo "SERVER_CONFIG_FILE=${RCDIR}/${DOMAIN}/conf/openssl-server.conf"  >> ${RCFILE}
+
+	cat<<__EOF__ >$RCDIR/${DOMAIN}/conf/openssl-server.conf
+RANDFILE               = $ENV::HOME/.rnd
+
+[ req ]
+default_bits           = 1024
+default_keyfile        = keyfile.pem
+distinguished_name     = req_distinguished_name
+attributes             = req_attributes
+prompt                 = no
+#output_password        = bliblablu
+
+[ req_distinguished_name ]
+C                      = IT
+ST                     = Italia
+L                      = Roma
+O                      = ${DOMAIN}
+OU                     = ${DOMAIN}
+CN                     = ${DOMAIN}
+emailAddress           = info@${DOMAIN}
+
+[ req_attributes ]
+#challengePassword      = blablabla
+__EOF__
+
+}
+
+if [ "$#" = 2 ];then
+	service=$1
+	operation=$2
+	RCFILE="$HOME/"."$APPNAME/service-${service}"".env"
+
+	if [ "$operation" = "create" ]; then
+		test -f ${RCFILE} || ( service_home_setup_write ; echo "Edit values in ${RCFILE}"; exit -1) 
+		source ${RCFILE}
+		service_create $service 
+	fi 
+	if [ "$operation" = "setup" ]; then
+		test -f ${RCFILE} || ( service_home_setup_write ; echo "Edit values in ${RCFILE}"; exit 0) 
+		source ${RCFILE}
+		service_home_setup_write $service
+	fi 
+	if [ "$operation" = "delete" ]; then
+		source ${RCFILE}
+		service_home_setup_delete  $service
+	fi 
+else
+	echo "Usage: $0 <service> <setup|create|delete>"
+	exit -1
+fi
+

@@ -1,0 +1,87 @@
+#! /bin/bash 
+# Usage: iron ca <setup|create|delete|reset>
+# Summary: manage CA
+# Help: This command groups commands used to setup config create delete a CA
+
+
+APPNAME="iron"
+CURRDIR=$(pwd)
+
+RCDIR=$HOME/.$APPNAME
+test -d $RCDIR || mkdir -p $RCDIR
+CURRENT_TSTAMP=$(date '+%Y%m%d%H%M')
+
+function ca_create()
+{
+	test -d $CAPATH   || mkdir -p ./$CAPATH
+	CA_DAYS=3650
+	openssl genrsa -out   $CAPATH/ca.key 2048 
+	openssl req    -batch -new -key $CAPATH/ca.key      -out $CAPATH/ca.csr -config $CA_CONFIG_FILE
+	openssl x509   -req   -days ${CA_DAYS} -in $CAPATH/ca.csr  -signkey $CAPATH/ca.key -out $CAPATH/ca.crt
+}
+
+function ca_home_setup_delete()
+{
+	echo "About to DELETE ca: are you sure? y/n"
+	read confirmation
+	if [ "$confirmation" = "y" ]; then
+		(rm -fr  $RCDIR/CA ;  rm $RCFILE) && echo "CA DELETED"
+	else
+		echo "SKIPPING"
+		exit -1
+	fi
+}
+
+function ca_home_setup_write()
+{
+	test -d $RCDIR/CA && ( echo "CA exist, please delete before" && exit -1)
+	test -d $RCDIR/CA || mkdir -p $RCDIR/CA
+	test -d $RCDIR/CA/conf || mkdir -p $RCDIR/CA/conf
+	echo "CAPATH=$RCDIR/CA">${RCFILE}
+	echo "CA_CONFIG_FILE=$RCDIR/CA/conf/openssl-ca.conf">>${RCFILE}
+	cat<<__EOF__ >$RCDIR/CA/conf/openssl-ca.conf
+RANDFILE               = $ENV::HOME/.rnd
+
+[ req ]
+default_bits           = 1024
+default_keyfile        = keyfile.pem
+distinguished_name     = req_distinguished_name
+attributes             = req_attributes
+prompt                 = no
+#output_password        = abadpass
+default_days		=3650
+
+[ req_distinguished_name ]
+C                      = IT
+ST                     = Italia
+L                      = Roma
+O                      = service.lulli.net
+OU                     = service.lulli.net
+CN                     = ca.service.lulli.net
+emailAddress           = info@service.lulli.net
+
+[ req_attributes ]
+challengePassword      = blablabla
+__EOF__
+}
+
+if [ "$#" = 1 ];then
+	operation=$1
+	RCFILE="$HOME/"."$APPNAME/default-ca"".env"
+	if [ "$operation" = "create" ]; then
+		test -f ${RCFILE} || ( ca_home_setup_write ; echo "Edit values in ${RCFILE}"; exit -1) 
+		source ${RCFILE}
+		ca_create
+	fi 
+	if [ "$operation" = "setup" ]; then
+		test -f ${RCFILE} || ( ca_home_setup_write ; echo "Edit values in ${RCFILE}"; exit 0) 
+		#source ${RCFILE}
+	fi 
+	if [ "$operation" = "delete" ]; then
+		ca_home_setup_delete  
+	fi 
+else
+	echo "Usage: $0 <create|setup|delete>"
+	exit -1
+fi
+

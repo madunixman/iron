@@ -1,0 +1,105 @@
+#! /bin/bash 
+# Usage: iron client <service-name> <client-id> <setup|create|delete>
+# Summary: manage CA
+# Help: This command groups commands used to setup config create delete a CA
+
+APPNAME="iron"
+CURRDIR=$(pwd)
+
+RCDIR=$HOME/.$APPNAME
+test -d $RCDIR || mkdir -p $RCDIR
+CURRENT_TSTAMP=$(date '+%Y%m%d%H%M')
+
+function client_create_csr()
+{
+	DOMAIN=$1
+	client=$2
+	CLIENT_CONFIG_FILE=${CLIENT_CONFIG_DIR}/client-${client}.conf
+	test -f $CLIENT_CONFIG_FILE || (echo "missing client config file"; exit -1)
+	CP=$CLIENT_CERTPATH/$client
+	mkdir -p $CP
+	openssl genrsa -out $CP/$client.key 1024
+	openssl req -new -key $CP/$client.key -out $CP/$client.csr -config $CLIENT_CONFIG_FILE
+}
+
+function client_home_setup_delete()
+{
+	DOMAIN=$1
+	client=$2
+	echo "About to DELETE cert path: [$RCDIR/${DOMAIN}] are you sure? y/n"
+	read confirmation
+	if [ "$confirmation" = "y" ]; then
+		(rm -fr $RCDIR/${DOMAIN}) && echo "CA DELETED"
+	else
+		echo "SKIPPING"
+		exit -1
+	fi
+}
+
+function client_home_setup_write()
+{
+
+	DOMAIN=$1
+	client=$2
+	CAPATH=$RCDIR/CA
+	CLIENT_CERTPATH=$RCDIR/${DOMAIN}/certs
+	test -d $CLIENT_CERTPATH/client/$client && ( echo "Dir exist, please delete before" && exit -1)
+	test -d $CLIENT_CERTPATH/client/$client || mkdir -p $CLIENT_CERTPATH/client/$client
+	test -d $RCDIR/${DOMAIN}/conf || mkdir -p $RCDIR/${DOMAIN}/conf
+	echo "CLIENT_CONFIG_DIR=$RCDIR/${DOMAIN}/conf" >> ${RCFILE}
+	echo "CLIENT_CERTPATH=$CLIENT_CERTPATH" >> ${RCFILE}
+	echo "CLIENT_CONFIG_FILE=${CLIENT_CONFIG_DIR}/client-${client}.conf" >> ${RCFILE}
+	echo "CAPATH=${RCDIR}/$DOMAIN/CA"  >> ${RCFILE}
+	test -d $CAPATH   	|| mkdir -p $CAPATH
+	test -d $CLIENT_CERTPATH || mkdir -p $CLIENT_CERTPATH
+
+	cat<<__EOF__ >$RCDIR/${DOMAIN}/conf/client-${client}.conf
+RANDFILE               = $ENV::HOME/.rnd
+
+[ req ]
+default_bits           = 1024
+default_keyfile        = keyfile.pem
+distinguished_name     = req_distinguished_name
+attributes             = req_attributes
+prompt                 = no
+#output_password        = bliblablu
+
+[ req_distinguished_name ]
+C                      = IT
+ST                     = Italia
+L                      = Roma
+O                      = ${DOMAIN}
+OU                     = ${DOMAIN}
+CN                     = ${client}
+emailAddress           = ${client}
+
+[ req_attributes ]
+#challengePassword      = blablabla
+__EOF__
+
+}
+
+if [ "$#" = 3 ];then
+	operation=$1
+	service=$2
+	client=$3
+	RCFILE="$RCDIR/$service/client-$client"".env"
+	if [ "$operation" = "csr" ]; then
+		test -f ${RCFILE} || ( client_home_setup_write ; echo "Edit values in ${RCFILE}"; exit -1) 
+		source ${RCFILE}
+		client_create_csr $service $client
+	fi 
+	if [ "$operation" = "setup" ]; then
+		test -f ${RCFILE} || ( client_home_setup_write ; echo "Edit values in ${RCFILE}"; exit 0) 
+		source ${RCFILE}
+		client_home_setup_write $service $client
+	fi 
+	if [ "$operation" = "delete" ]; then
+		source ${RCFILE}
+		#client_home_setup_delete  $service $client
+	fi 
+else
+	echo "Usage: $0 <setup|csr|delete> <service> <client-id>"
+	exit -1
+fi
+
