@@ -19,10 +19,7 @@ function certificate_sign()
 	CLIENT_CERTPATH=$RCDIR/$service/certs
 	CP=$CLIENT_CERTPATH/$client
 	test -d ${CP} || mkdir -p ${CP}
-	#openssl x509 -req -days 365 -CA $CAPATH/ca.crt -CAkey $CAPATH/ca.key -CAcreateserial -in $CP/$client.csr -out $CP/$client.crt
 	openssl x509 -req -days 365 -CA $CAPATH/ca.crt -CAkey $CAPATH/ca.key -CAcreateserial -in $csrfile -out $CP/$client.crt
-	#test -f $CP/$client.crt && echo "Created certificate in [$CP/$client.crt]"
-	cat $CP/$client.crt
 }
 
 function remote_client_write_setup()
@@ -41,13 +38,14 @@ function remote_certificate_sign()
 	remote_csr_host=$3
 	remote_csrfile=$4
 	csrfile=$(basename $remote_csrfile) 
+	remote_certdir=$(dirname $remote_csrfile) 
 	client=$(basename $csrfile | sed -e 's/.csr$//')
 	CLIENT_CERTPATH=$RCDIR/$service/certs
-	CP=$CLIENT_CERTPATH/$client test -d ${CP} || mkdir -p ${CP}
+	CP=$CLIENT_CERTPATH/$client 
+	test -d ${CP} || mkdir -p ${CP}
 	scp $remote_csr_user@$remote_csr_host:$remote_csrfile $CP/$client.csr
 	openssl x509 -req -days 365 -CA $CAPATH/ca.crt -CAkey $CAPATH/ca.key -CAcreateserial -in $CP/$client.csr -out $CP/$client.crt
-	scp $CP/$client.crt $REMOTE_USER@$REMOTE_HOST:$RCDIR/$CLIENT_CERTPATH/$client
-	cat $CP/$client.crt
+	scp $CP/$client.crt $REMOTE_USER@$REMOTE_HOST:$remote_certdir
 }
 
 function certificate_create()
@@ -83,7 +81,7 @@ if [ "$#" = 3 ];then
 		test -f $CLIENT_RCFILE && source ${CLIENT_RCFILE}
 		remote_csr_user=$REMOTE_USER
 		remote_csr_host=$REMOTE_HOST
-		remote_csrfile=$REMOTE_RCDIR/$service/certs/$client.csr
+		remote_csrfile=$REMOTE_RCDIR/$service/certs/$client/$client.csr
 		remote_certificate_sign $service $remote_csr_user $remote_csr_host $remote_csrfile
 	fi 
 else

@@ -90,9 +90,9 @@ if [ "$#" = 3 ];then
 		client_create_csr $service $client
 	fi 
 	if [ "$operation" = "setup" ]; then
-		test -f ${RCFILE} || ( client_home_setup_write ; echo "Edit values in ${RCFILE}"; exit 0) 
-		source ${RCFILE}
-		client_home_setup_write $service $client
+		test -f ${RCFILE} || ( client_home_setup_write $service $client; echo "Edit values in ${RCFILE}"; exit 0) 
+		#source ${RCFILE}
+		#client_home_setup_write $service $client
 	fi 
 	if [ "$operation" = "delete" ]; then
 		source ${RCFILE}

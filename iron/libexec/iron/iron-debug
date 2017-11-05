@@ -1,0 +1,27 @@
+#! /bin/bash 
+# Usage: $iron debug <pkcs12> <certificate.p12>
+# Summary: manage CA
+# Help: This command groups commands used to setup config create delete a CA
+
+
+APPNAME="iron"
+CURRDIR=$(pwd)
+
+RCDIR=$HOME/.$APPNAME
+test -d $RCDIR || mkdir -p $RCDIR
+CURRENT_TSTAMP=$(date '+%Y%m%d%H%M')
+
+if [ "$#" = 2 ];then
+	operation=$1
+	fileio=$2
+	RCFILE="$HOME/"."$APPNAME/default-ca"".env"
+	if [ "$operation" = "pkcs12" ]; then
+		keytool -list -keystore $fileio \
+	-storetype PKCS12 -v
+	#-storepass xxxxxx 
+	fi 
+else
+	echo "Usage: iron debug <pkcs12> <certificate.p12>"
+	exit -1
+fi
+
