@@ -5,4 +5,10 @@ nobase_dist_libexec_SCRIPTS = iron\
 	iron/iron-completions\
 	iron/iron-help\
 	iron/iron-init\
-	iron/iron-sh-shell
+	iron/iron-sh-shell\
+	iron/iron-ca\
+	iron/iron-certificate\
+	iron/iron-client\
+	iron/iron-init\
+	iron/iron-service
+
