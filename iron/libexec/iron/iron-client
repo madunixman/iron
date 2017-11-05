@@ -1,6 +1,6 @@
 #! /bin/bash 
 # Usage: iron client <service-name> <client-id> <setup|create|delete>
-# Summary: manage CA
+# Summary: manage CSR for certificates creation
 # Help: This command groups commands used to setup config create delete a CA
 
 APPNAME="iron"

@@ -9,6 +9,5 @@ nobase_dist_libexec_SCRIPTS = iron\
 	iron/iron-ca\
 	iron/iron-certificate\
 	iron/iron-client\
-	iron/iron-init\
 	iron/iron-service
 

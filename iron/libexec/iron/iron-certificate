@@ -1,6 +1,6 @@
 #! /bin/bash 
-# Usage: iron certificate <sign> <filename>
-# Summary: manage CA
+# Usage: $iron certificate <sign> <filename>
+# Summary: create certificates 
 # Help: This command groups commands used to setup config create delete a CA
 
 
@@ -21,7 +21,33 @@ function certificate_sign()
 	test -d ${CP} || mkdir -p ${CP}
 	#openssl x509 -req -days 365 -CA $CAPATH/ca.crt -CAkey $CAPATH/ca.key -CAcreateserial -in $CP/$client.csr -out $CP/$client.crt
 	openssl x509 -req -days 365 -CA $CAPATH/ca.crt -CAkey $CAPATH/ca.key -CAcreateserial -in $csrfile -out $CP/$client.crt
-	test -f $CP/$client.crt && echo "Created certificate in [$CP/$client.crt]"
+	#test -f $CP/$client.crt && echo "Created certificate in [$CP/$client.crt]"
+	cat $CP/$client.crt
+}
+
+function remote_client_write_setup()
+{
+	CLIENT_RCFILE="$RCDIR/client-$client"".env"
+        echo "REMOTE_RCDIR=$RCDIR">${CLIENT_RCFILE}
+        echo "REMOTE_USER=">>${CLIENT_RCFILE}
+        echo "REMOTE_HOST=">>${CLIENT_RCFILE}
+}
+
+
+function remote_certificate_sign()
+{
+	service=$1
+	remote_csr_user=$2
+	remote_csr_host=$3
+	remote_csrfile=$4
+	csrfile=$(basename $remote_csrfile) 
+	client=$(basename $csrfile | sed -e 's/.csr$//')
+	CLIENT_CERTPATH=$RCDIR/$service/certs
+	CP=$CLIENT_CERTPATH/$client test -d ${CP} || mkdir -p ${CP}
+	scp $remote_csr_user@$remote_csr_host:$remote_csrfile $CP/$client.csr
+	openssl x509 -req -days 365 -CA $CAPATH/ca.crt -CAkey $CAPATH/ca.key -CAcreateserial -in $CP/$client.csr -out $CP/$client.crt
+	scp $CP/$client.crt $REMOTE_USER@$REMOTE_HOST:$RCDIR/$CLIENT_CERTPATH/$client
+	cat $CP/$client.crt
 }
 
 function certificate_create()
@@ -49,10 +75,22 @@ if [ "$#" = 3 ];then
 		client=$3
 		certificate_create $service $client
 	fi 
+
+	if [ "$operation" = "remotesign" ]; then
+		client=$3
+		CLIENT_RCFILE="$RCDIR/client-$client"".env"
+		test -f $CLIENT_RCFILE || ( echo "Edit $CLIENT_RCFILE first" && remote_client_write_setup  ; exit -1)
+		test -f $CLIENT_RCFILE && source ${CLIENT_RCFILE}
+		remote_csr_user=$REMOTE_USER
+		remote_csr_host=$REMOTE_HOST
+		remote_csrfile=$REMOTE_RCDIR/$service/certs/$client.csr
+		remote_certificate_sign $service $remote_csr_user $remote_csr_host $remote_csrfile
+	fi 
 else
 	echo "Usage:"
-	echo "iron certificate <sign> <CSR-file>"
-	echo "iron certificate <create> <client-id>"
+	echo "\$iron certificate <sign> <service> <CSR-file>"
+	echo "\$iron certificate <create> <service> <client-id>"
+	echo "\$iron certificate <remotesign> <service><client-id>"
 	exit -1
 fi
 

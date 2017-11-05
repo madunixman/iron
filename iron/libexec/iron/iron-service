@@ -1,6 +1,6 @@
 #! /bin/bash 
 # Usage: iron service <service-name> <setup|create|delete>
-# Summary: manage CA
+# Summary: manage service/server certificate creation
 # Help: This command groups commands used to setup config create delete a CA
 
 APPNAME="iron"
@@ -68,8 +68,8 @@ __EOF__
 }
 
 if [ "$#" = 2 ];then
-	service=$1
-	operation=$2
+	operation=$1
+	service=$2
 	RCFILE="$HOME/"."$APPNAME/service-${service}"".env"
 
 	if [ "$operation" = "create" ]; then
@@ -87,7 +87,7 @@ if [ "$#" = 2 ];then
 		service_home_setup_delete  $service
 	fi 
 else
-	echo "Usage: iron service <service> <setup|create|delete>"
+	echo "Usage: \$iron service <setup|create|delete> <service>"
 	exit -1
 fi
 
