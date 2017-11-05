@@ -81,7 +81,7 @@ if [ "$#" = 1 ];then
 		ca_home_setup_delete  
 	fi 
 else
-	echo "Usage: $0 <create|setup|delete>"
+	echo "Usage: iron ca <create|setup|delete>"
 	exit -1
 fi
 

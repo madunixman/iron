@@ -99,7 +99,7 @@ if [ "$#" = 3 ];then
 		#client_home_setup_delete  $service $client
 	fi 
 else
-	echo "Usage: $0 <setup|csr|delete> <service> <client-id>"
+	echo "Usage: iron client <setup|csr|delete> <service> <client-id>"
 	exit -1
 fi
 

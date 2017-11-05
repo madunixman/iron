@@ -51,8 +51,8 @@ if [ "$#" = 3 ];then
 	fi 
 else
 	echo "Usage:"
-	echo "$0 <sign> <CSR-file>"
-	echo "$0 <create> <client-id>"
+	echo "iron certificate <sign> <CSR-file>"
+	echo "iron certificate <create> <client-id>"
 	exit -1
 fi
 

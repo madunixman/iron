@@ -87,7 +87,7 @@ if [ "$#" = 2 ];then
 		service_home_setup_delete  $service
 	fi 
 else
-	echo "Usage: $0 <service> <setup|create|delete>"
+	echo "Usage: iron service <service> <setup|create|delete>"
 	exit -1
 fi
 
