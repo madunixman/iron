@@ -73,12 +73,14 @@ if [ "$#" = 2 ];then
 	RCFILE="$HOME/"."$APPNAME/service-${service}"".env"
 
 	if [ "$operation" = "create" ]; then
-		test -f ${RCFILE} || ( service_home_setup_write ; echo "Edit values in ${RCFILE}"; exit -1) 
+		echo "BEFORE"
+		test -f ${RCFILE} || ( service_home_setup_write $service; echo "Edit values in ${RCFILE}"; exit -1) 
+		echo "AFTER"
 		source ${RCFILE}
 		service_create $service 
 	fi 
 	if [ "$operation" = "setup" ]; then
-		test -f ${RCFILE} || ( service_home_setup_write ; echo "Edit values in ${RCFILE}"; exit 0) 
+		test -f ${RCFILE} || ( service_home_setup_write $service; echo "Edit values in ${RCFILE}"; exit 0) 
 	fi 
 	if [ "$operation" = "delete" ]; then
 		source ${RCFILE}

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERS=1.0.0
+VERS=1.0.1
 TARGET_DIR=../target
 cd $(dirname $0);
 CURRDIR=$(pwd)

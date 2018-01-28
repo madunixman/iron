@@ -1,8 +1,7 @@
 #! /bin/bash 
-# Usage: $iron certificate <sign> <filename>
-# Summary: create certificates 
-# Help: This command groups commands used to setup config create delete a CA
-
+# Usage: $iron pkcs12 create <service> <client>
+# Summary: create *.p12 keystore
+# Help: This command groups commands used to create pkcs#12 for distribution
 
 APPNAME="iron"
 CURRDIR=$(pwd)
@@ -73,39 +72,19 @@ function pkcs12_create()
 	test -f $CP/$client.p12 && echo "Created PKCS12 (*.p12) in [$CP/$client.p12]"
 }
 
-
-
-
 if [ "$#" = 3 ];then
 	operation=$1
 	service=$2
 	CA_RCFILE="$HOME/"."$APPNAME/default-ca"".env"
 	source ${CA_RCFILE}
-	if [ "$operation" = "sign" ]; then
-		csrfile=$3
-		certificate_sign $service $csrfile
-	fi 
 
 	if [ "$operation" = "create" ]; then
 		client=$3
-		certificate_create $service $client
 		pkcs12_create $service $client
 	fi 
 
-	if [ "$operation" = "remotesign" ]; then
-		client=$3
-		CLIENT_RCFILE="$RCDIR/client-$client"".env"
-		test -f $CLIENT_RCFILE || ( echo "Edit $CLIENT_RCFILE first" ; remote_client_write_setup  ; exit -1)
-		test -f $CLIENT_RCFILE && source ${CLIENT_RCFILE}
-		remote_csr_user=$REMOTE_USER
-		remote_csr_host=$REMOTE_HOST
-		remote_csrfile=$REMOTE_RCDIR/$service/certs/$client/$client.csr
-		remote_certificate_sign $service $remote_csr_user $remote_csr_host $remote_csrfile
-	fi 
 else
 	echo "Usage:"
-	echo "\$iron certificate <sign> <service> <CSR-file>"
-	echo "\$iron certificate <create> <service> <client-id>"
-	echo "\$iron certificate <remotesign> <service><client-id>"
+	echo "\$iron pkcs12 <create> <service> <client-id>"
 	exit -1
 fi

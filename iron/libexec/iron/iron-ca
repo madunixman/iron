@@ -57,7 +57,8 @@ ST                     = Italia
 L                      = Roma
 O                      = service.lulli.net
 OU                     = service.lulli.net
-CN                     = ca.service.lulli.net
+#CN                     = ca.service.lulli.net
+CN                     = service.lulli.net
 emailAddress           = info@service.lulli.net
 
 [ req_attributes ]
