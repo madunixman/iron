@@ -36,6 +36,22 @@ function client_home_setup_delete()
 	fi
 }
 
+function client_export_bundle()
+{
+	DOMAIN=$1
+	client=$2
+	CAPATH=$RCDIR/CA
+	CLIENT_CERTPATH=$RCDIR/${DOMAIN}/certs
+	target_dir="cert-$client"
+	mkdir -p $target_dir/CA
+	mkdir -p $target_dir/$domain
+	mkdir -p $target_dir/$domain/certs/$client
+	cp $CAPATH/ca.crt $target_dir/CA
+	cp $CLIENT_CERTPATH/$client/$client.crt $target_dir/$domain/certs/$client
+	openssl rsa -aes256 -in $CLIENT_CERTPATH/$client/$client.key --out $target_dir/$domain/certs/$client/$client.key
+	tar cvfz $target_dir.tar.gz $target_dir && rm -fr $target_dir
+}
+
 function client_home_setup_write()
 {
 
@@ -91,15 +107,16 @@ if [ "$#" = 3 ];then
 	fi 
 	if [ "$operation" = "setup" ]; then
 		test -f ${RCFILE} || ( client_home_setup_write $service $client; echo "Edit values in ${RCFILE}"; exit 0) 
-		#source ${RCFILE}
-		#client_home_setup_write $service $client
+	fi 
+	if [ "$operation" = "export" ]; then
+		client_export_bundle $service $client
 	fi 
 	if [ "$operation" = "delete" ]; then
 		source ${RCFILE}
 		#client_home_setup_delete  $service $client
 	fi 
 else
-	echo "Usage: iron client <setup|csr|delete> <service> <client-id>"
+	echo "Usage: iron client <setup|csr|delete|export> <service> <client-id>"
 	exit -1
 fi
 
