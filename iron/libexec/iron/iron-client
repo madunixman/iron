@@ -44,11 +44,11 @@ function client_export_bundle()
 	CLIENT_CERTPATH=$RCDIR/${DOMAIN}/certs
 	target_dir="cert-$client"
 	mkdir -p $target_dir/CA
-	mkdir -p $target_dir/$domain
-	mkdir -p $target_dir/$domain/certs/$client
+	mkdir -p $target_dir/$DOMAIN
+	mkdir -p $target_dir/$DOMAIN/certs/$client
 	cp $CAPATH/ca.crt $target_dir/CA
-	cp $CLIENT_CERTPATH/$client/$client.crt $target_dir/$domain/certs/$client
-	openssl rsa -aes256 -in $CLIENT_CERTPATH/$client/$client.key --out $target_dir/$domain/certs/$client/$client.key
+	cp $CLIENT_CERTPATH/$client/$client.crt $target_dir/$DOMAIN/certs/$client
+	openssl rsa -aes256 -in $CLIENT_CERTPATH/$client/$client.key --out $target_dir/$DOMAIN/certs/$client/$client.key
 	tar cvfz $target_dir.tar.gz $target_dir && rm -fr $target_dir
 }
 

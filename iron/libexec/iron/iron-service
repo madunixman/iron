@@ -14,8 +14,12 @@ function service_create()
 {
 	test -d $CERTPATH   || mkdir -p $CERTPATH
 	openssl genrsa -out   $CERTPATH/server.key 2048 
-	openssl req    -batch -new -key $CERTPATH/server.key      -out $CERTPATH/server.csr -config $SERVER_CONFIG_FILE
-	openssl x509   -req   -days 365 -in $CERTPATH/server.csr -signkey $CERTPATH/server.key -out $CERTPATH/server.crt
+	openssl req    -batch -new -key $CERTPATH/server.key -out $CERTPATH/server.csr -config $SERVER_CONFIG_FILE
+	#OLD::openssl x509   -req   -days 365 -in $CERTPATH/server.csr -signkey $CERTPATH/server.key -out $CERTPATH/server.crt
+	openssl x509   -req   -days 365 -CA $CAPATH/ca.crt -CAkey $CAPATH/ca.key -CAcreateserial -in $CERTPATH/server.csr \
+		-signkey $CERTPATH/server.key -out $CERTPATH/server.crt
+	#openssl ca -cert $CAPATH/ca.crt  -keyfile $CAPATH/ca.key -in $CERTPATH/server.csr -out $CERTPATH/server.crt -config /home/paolo/.iron/dev.lulli.net/conf/openssl-server.conf
+
 }
 
 function service_home_setup_delete()
