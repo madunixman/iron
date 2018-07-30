@@ -10,5 +10,6 @@ nobase_dist_libexec_SCRIPTS = iron\
 	iron/iron-certificate\
 	iron/iron-client\
 	iron/iron-service\
+	iron/iron-keystore\
+	iron/iron-pkcs12\
 	iron/iron-debug
-
